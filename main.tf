@@ -14,7 +14,7 @@ locals {
 
 resource "citrixadc_server" "le_lb_server" {
   name      = local.lb-srv-name
-  ipaddress = var.adc-letsencrypt-lb.backendip
+  ipaddress = var.adc-letsencrypt-lb.backend-ip
 }
 
 #####
