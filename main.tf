@@ -1,12 +1,20 @@
+data "adc-letsencrypt-lb" "static" {
+  lb-srv-name           = "lb_srv_letsencrypt_backend"
+  lb-sg-name            = "lb_sg_letsencrypt_backend"
+  lb-sg-healthmonitor   = "NO"
+  lb-vs-name            = "lb_srv_letsencrypt"  
+  lb-vs-lbmethod        = "LEASTCONNECTION"
+  lb-vs-persistencetype = "SOURCEIP"
+  lb-vs-timeout         = "2"
+}
 
 #####
 # Add LB Server
 #####
 
 resource "citrixadc_server" "le_lb_server" {
-  count     = length(var.adc-lb-server.name)
-  name      = element(var.adc-lb-server["name"],count.index)
-  ipaddress = element(var.adc-lb-server["ip"],count.index)
+  name      = data.adc-letsencrypt-lb.static.lb-srv-name
+  ipaddress = var.adc-letsencrypt-lb.backendip
 }
 
 #####
@@ -14,10 +22,10 @@ resource "citrixadc_server" "le_lb_server" {
 #####
 
 resource "citrixadc_servicegroup" "le_lb_servicegroup" {
-  count             = length(var.adc-lb-servicegroup.servicegroupname)
-  servicegroupname  = element(var.adc-lb-servicegroup["servicegroupname"],count.index)
-  servicetype       = element(var.adc-lb-servicegroup["servicetype"],count.index)
-  healthmonitor     = element(var.adc-lb-servicegroup["healthmonitor"],count.index)
+
+  servicegroupname  = data.adc-letsencrypt-lb.static.lb-sg-name
+  servicetype       = var.adc-lb-servicegroup.servicetype
+  healthmonitor     = data.adc-letsencrypt-lb.static.lb-sg-healthmonitor
 
   depends_on = [
     citrixadc_server.le_lb_server
@@ -29,10 +37,9 @@ resource "citrixadc_servicegroup" "le_lb_servicegroup" {
 #####
 
 resource "citrixadc_servicegroup_servicegroupmember_binding" "le_lb_sg_server_binding" {
-  count             = length(var.adc-lb-sg-server-binding.servicegroupname)
-  servicegroupname  = element(var.adc-lb-sg-server-binding["servicegroupname"],count.index)
-  servername        = element(var.adc-lb-sg-server-binding["servername"],count.index)
-  port              = element(var.adc-lb-sg-server-binding["port"],count.index)
+  servicegroupname  = citrixadc_servicegroup.le_lb_servicegroup.servicegroupname
+  servername        = citrixadc_server.le_lb_server.name
+  port              = var.adc-letsencrypt-lb.port
 
   depends_on = [
     citrixadc_servicegroup.le_lb_servicegroup
@@ -44,15 +51,13 @@ resource "citrixadc_servicegroup_servicegroupmember_binding" "le_lb_sg_server_bi
 #####
 
 resource "citrixadc_lbvserver" "le_lb_vserver_http" {
-  count   = length(var.adc-lb-vserver-http.name)
-  name    = element(var.adc-lb-vserver-http["name"],count.index)
-
-  servicetype = element(var.adc-lb-vserver-http["servicetype"],count.index)
-  ipv46 = element(var.adc-lb-vserver-http["ipv46"],count.index)
-  port = element(var.adc-lb-vserver-http["port"],count.index)
-  lbmethod = element(var.adc-lb-vserver-http["lbmethod"],count.index)
-  persistencetype = element(var.adc-lb-vserver-http["persistencetype"],count.index)
-  timeout = element(var.adc-lb-vserver-http["timeout"],count.index)
+  name            = data.adc-letsencrypt-lb.static.lb-vs-name
+  servicetype     = var.adc-letsencrypt-lb.servicetype
+  ipv46           = var.adc-letsencrypt-lb.frontend-ip
+  port            = var.adc-letsencrypt-lb.port
+  lbmethod        = data.adc-letsencrypt-lb.static.lb-vs-lbmethod
+  persistencetype = data.adc-letsencrypt-lb.static.lb-vs-persistencetype
+  timeout         = data.adc-letsencrypt-lb.static.lb-vs-timeout
 
   depends_on = [
     citrixadc_servicegroup_servicegroupmember_binding.le_lb_sg_server_binding
@@ -64,9 +69,8 @@ resource "citrixadc_lbvserver" "le_lb_vserver_http" {
 #####
 
 resource "citrixadc_lbvserver_servicegroup_binding" "le_lb_vserver_sg_binding" {
-  count             = length(var.adc-lb-vserver-sg-binding.name)
-  name              = element(var.adc-lb-vserver-sg-binding["name"],count.index)
-  servicegroupname  = element(var.adc-lb-vserver-sg-binding["servicegroupname"],count.index)
+  name              = citrixadc_lbvserver.le_lb_vserver_http.name
+  servicegroupname  = citrixadc_servicegroup.le_lb_servicegroup.servicegroupname
 
   depends_on = [
     citrixadc_lbvserver.le_lb_vserver_http
