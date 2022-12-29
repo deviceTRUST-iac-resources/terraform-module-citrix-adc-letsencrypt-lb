@@ -24,7 +24,7 @@ resource "citrixadc_server" "le_lb_server" {
 resource "citrixadc_servicegroup" "le_lb_servicegroup" {
 
   servicegroupname  = local.lb-sg-name
-  servicetype       = var.adc-lb-servicegroup.servicetype
+  servicetype       = var.adc-letsencrypt-lb.servicetype
   healthmonitor     = local.lb-sg-healthmonitor
 
   depends_on = [
