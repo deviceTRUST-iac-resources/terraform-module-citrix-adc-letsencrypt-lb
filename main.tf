@@ -1,4 +1,4 @@
-local "adc-letsencrypt-lb" "static" {
+locals "adc-letsencrypt-lb" {
   lb-srv-name           = "lb_srv_letsencrypt_backend"
   lb-sg-name            = "lb_sg_letsencrypt_backend"
   lb-sg-healthmonitor   = "NO"
@@ -13,7 +13,7 @@ local "adc-letsencrypt-lb" "static" {
 #####
 
 resource "citrixadc_server" "le_lb_server" {
-  name      = data.adc-letsencrypt-lb.static.lb-srv-name
+  name      = local.adc-letsencrypt-lb.lb-srv-name
   ipaddress = var.adc-letsencrypt-lb.backendip
 }
 
@@ -23,9 +23,9 @@ resource "citrixadc_server" "le_lb_server" {
 
 resource "citrixadc_servicegroup" "le_lb_servicegroup" {
 
-  servicegroupname  = data.adc-letsencrypt-lb.static.lb-sg-name
+  servicegroupname  = local.adc-letsencrypt-lb.lb-sg-name
   servicetype       = var.adc-lb-servicegroup.servicetype
-  healthmonitor     = data.adc-letsencrypt-lb.static.lb-sg-healthmonitor
+  healthmonitor     = local.adc-letsencrypt-lb.lb-sg-healthmonitor
 
   depends_on = [
     citrixadc_server.le_lb_server
@@ -51,13 +51,13 @@ resource "citrixadc_servicegroup_servicegroupmember_binding" "le_lb_sg_server_bi
 #####
 
 resource "citrixadc_lbvserver" "le_lb_vserver_http" {
-  name            = data.adc-letsencrypt-lb.static.lb-vs-name
+  name            = local.adc-letsencrypt-lb.lb-vs-name
   servicetype     = var.adc-letsencrypt-lb.servicetype
   ipv46           = var.adc-letsencrypt-lb.frontend-ip
   port            = var.adc-letsencrypt-lb.port
-  lbmethod        = data.adc-letsencrypt-lb.static.lb-vs-lbmethod
-  persistencetype = data.adc-letsencrypt-lb.static.lb-vs-persistencetype
-  timeout         = data.adc-letsencrypt-lb.static.lb-vs-timeout
+  lbmethod        = local.adc-letsencrypt-lb.lb-vs-lbmethod
+  persistencetype = local.adc-letsencrypt-lb.lb-vs-persistencetype
+  timeout         = local.adc-letsencrypt-lb.lb-vs-timeout
 
   depends_on = [
     citrixadc_servicegroup_servicegroupmember_binding.le_lb_sg_server_binding
