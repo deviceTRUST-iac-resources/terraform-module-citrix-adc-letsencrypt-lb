@@ -1,4 +1,4 @@
-data "adc-letsencrypt-lb" "static" {
+local "adc-letsencrypt-lb" "static" {
   lb-srv-name           = "lb_srv_letsencrypt_backend"
   lb-sg-name            = "lb_sg_letsencrypt_backend"
   lb-sg-healthmonitor   = "NO"
