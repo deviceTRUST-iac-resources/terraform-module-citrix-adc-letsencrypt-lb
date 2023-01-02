@@ -2,7 +2,7 @@ locals {
   lb-srv-name           = "lb_srv_letsencrypt_backend"
   lb-sg-name            = "lb_sg_letsencrypt_backend"
   lb-sg-healthmonitor   = "NO"
-  lb-vs-name            = "lb_srv_letsencrypt"  
+  lb-vs-name            = "lb_vs_letsencrypt"  
   lb-vs-lbmethod        = "LEASTCONNECTION"
   lb-vs-persistencetype = "SOURCEIP"
   lb-vs-timeout         = "2"
