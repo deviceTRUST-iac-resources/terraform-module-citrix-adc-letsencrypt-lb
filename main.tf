@@ -86,7 +86,7 @@ resource "citrixadc_nsconfig_save" "le_lb_install_save" {
   timestamp  = timestamp()
 
   depends_on = [
-    time_sleep.le_lb_install_wait
+    citrixadc_lbvserver_servicegroup_binding.le_lb_install_vserver_sg_binding
   ]
 }
 
