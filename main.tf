@@ -78,20 +78,6 @@ resource "citrixadc_lbvserver_servicegroup_binding" "le_lb_install_vserver_sg_bi
 }
 
 #####
-# Wait a few seconds
-#####
-
-resource "time_sleep" "le_lb_install_wait" {
-
-  create_duration = "10s"
-
-  depends_on = [
-    citrixadc_lbvserver_servicegroup_binding.le_lb_install_vserver_sg_binding
-  ]
-
-}
-
-#####
 # Save config
 #####
 
