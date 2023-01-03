@@ -100,6 +100,6 @@ resource "citrixadc_nsconfig_save" "le_lb_save" {
   timestamp  = timestamp()
 
   depends_on = [
-    ctime_sleep.le_lb_wait
+    time_sleep.le_lb_wait
   ]
 }
