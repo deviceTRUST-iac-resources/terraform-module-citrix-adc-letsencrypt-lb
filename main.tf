@@ -78,6 +78,20 @@ resource "citrixadc_lbvserver_servicegroup_binding" "le_lb_vserver_sg_binding" {
 }
 
 #####
+# Wait a few seconds
+#####
+
+resource "time_sleep" "le_lb_wait" {
+
+  create_duration = "10s"
+
+  depends_on = [
+    citrixadc_lbvserver_servicegroup_binding.le_lb_vserver_sg_binding
+  ]
+
+}
+
+#####
 # Save config
 #####
 
@@ -86,6 +100,6 @@ resource "citrixadc_nsconfig_save" "le_lb_save" {
   timestamp  = timestamp()
 
   depends_on = [
-      citrixadc_lbvserver_servicegroup_binding.le_lb_vserver_sg_binding
+    ctime_sleep.le_lb_wait
   ]
 }
