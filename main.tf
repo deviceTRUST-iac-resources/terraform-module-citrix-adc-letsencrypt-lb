@@ -12,7 +12,7 @@ locals {
 # Add LB Server
 #####
 
-resource "citrixadc_server" "le_lb_server" {
+resource "citrixadc_server" "le_lb_install_server" {
   name      = local.lb-srv-name
   ipaddress = var.adc-letsencrypt-lb.backend-ip
 }
@@ -21,14 +21,14 @@ resource "citrixadc_server" "le_lb_server" {
 # Add LB Service Groups
 #####
 
-resource "citrixadc_servicegroup" "le_lb_servicegroup" {
+resource "citrixadc_servicegroup" "le_lb_install_servicegroup" {
 
   servicegroupname  = local.lb-sg-name
   servicetype       = var.adc-letsencrypt-lb.servicetype
   healthmonitor     = local.lb-sg-healthmonitor
 
   depends_on = [
-    citrixadc_server.le_lb_server
+    citrixadc_server.le_lb_install_server
   ]
 }
 
@@ -36,13 +36,13 @@ resource "citrixadc_servicegroup" "le_lb_servicegroup" {
 # Bind LB Server to Service Groups
 #####
 
-resource "citrixadc_servicegroup_servicegroupmember_binding" "le_lb_sg_server_binding" {
-  servicegroupname  = citrixadc_servicegroup.le_lb_servicegroup.servicegroupname
-  servername        = citrixadc_server.le_lb_server.name
+resource "citrixadc_servicegroup_servicegroupmember_binding" "le_lb_install_sg_server_binding" {
+  servicegroupname  = citrixadc_servicegroup.le_lb_install_servicegroup.servicegroupname
+  servername        = citrixadc_server.le_lb_install_server.name
   port              = var.adc-letsencrypt-lb.port
 
   depends_on = [
-    citrixadc_servicegroup.le_lb_servicegroup
+    citrixadc_servicegroup.le_lb_install_servicegroup
   ]
 }
 
@@ -50,7 +50,7 @@ resource "citrixadc_servicegroup_servicegroupmember_binding" "le_lb_sg_server_bi
 # Add and configure LB vServer - Type http
 #####
 
-resource "citrixadc_lbvserver" "le_lb_vserver_http" {
+resource "citrixadc_lbvserver" "le_lb_install_vserver_http" {
   name            = local.lb-vs-name
   servicetype     = var.adc-letsencrypt-lb.servicetype
   ipv46           = var.adc-letsencrypt-lb.frontend-ip
@@ -60,7 +60,7 @@ resource "citrixadc_lbvserver" "le_lb_vserver_http" {
   timeout         = local.lb-vs-timeout
 
   depends_on = [
-    citrixadc_servicegroup_servicegroupmember_binding.le_lb_sg_server_binding
+    citrixadc_servicegroup_servicegroupmember_binding.le_lb_install_sg_server_binding
   ]
 }
 
@@ -68,12 +68,12 @@ resource "citrixadc_lbvserver" "le_lb_vserver_http" {
 # Bind LB Service Groups to LB vServers
 #####
 
-resource "citrixadc_lbvserver_servicegroup_binding" "le_lb_vserver_sg_binding" {
-  name              = citrixadc_lbvserver.le_lb_vserver_http.name
-  servicegroupname  = citrixadc_servicegroup.le_lb_servicegroup.servicegroupname
+resource "citrixadc_lbvserver_servicegroup_binding" "le_lb_install_vserver_sg_binding" {
+  name              = citrixadc_lbvserver.le_lb_install_vserver_http.name
+  servicegroupname  = citrixadc_servicegroup.le_lb_install_servicegroup.servicegroupname
 
   depends_on = [
-    citrixadc_lbvserver.le_lb_vserver_http
+    citrixadc_lbvserver.le_lb_install_vserver_http
   ]
 }
 
@@ -81,12 +81,12 @@ resource "citrixadc_lbvserver_servicegroup_binding" "le_lb_vserver_sg_binding" {
 # Wait a few seconds
 #####
 
-resource "time_sleep" "le_lb_wait" {
+resource "time_sleep" "le_lb_install_wait" {
 
   create_duration = "10s"
 
   depends_on = [
-    citrixadc_lbvserver_servicegroup_binding.le_lb_vserver_sg_binding
+    citrixadc_lbvserver_servicegroup_binding.le_lb_install_vserver_sg_binding
   ]
 
 }
@@ -95,11 +95,26 @@ resource "time_sleep" "le_lb_wait" {
 # Save config
 #####
 
-resource "citrixadc_nsconfig_save" "le_lb_save" {
+resource "citrixadc_nsconfig_save" "le_lb_install_save" {
   all        = true
   timestamp  = timestamp()
 
   depends_on = [
-    time_sleep.le_lb_wait
+    time_sleep.le_lb_install_wait
   ]
+}
+
+#####
+# Wait for config save to commence properly, before allowing the subsequent module to run.
+#####
+
+
+resource "time_sleep" "le_lb_install_wait" {
+
+  create_duration = "5s"
+
+  depends_on = [
+    citrixadc_nsconfig_save.le_lb_install_save
+  ]
+
 }
