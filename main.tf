@@ -1,3 +1,6 @@
+#####
+# Define Locals
+#####
 locals {
   lb-srv-name           = "lb_srv_letsencrypt_backend"
   lb-sg-name            = "lb_sg_letsencrypt_backend"
@@ -11,7 +14,6 @@ locals {
 #####
 # Add LB Server
 #####
-
 resource "citrixadc_server" "le_lb_install_server" {
   name      = local.lb-srv-name
   ipaddress = var.adc-letsencrypt-lb.backend-ip
@@ -20,7 +22,6 @@ resource "citrixadc_server" "le_lb_install_server" {
 #####
 # Add LB Service Groups
 #####
-
 resource "citrixadc_servicegroup" "le_lb_install_servicegroup" {
 
   servicegroupname  = local.lb-sg-name
@@ -35,7 +36,6 @@ resource "citrixadc_servicegroup" "le_lb_install_servicegroup" {
 #####
 # Bind LB Server to Service Groups
 #####
-
 resource "citrixadc_servicegroup_servicegroupmember_binding" "le_lb_install_sg_server_binding" {
   servicegroupname  = citrixadc_servicegroup.le_lb_install_servicegroup.servicegroupname
   servername        = citrixadc_server.le_lb_install_server.name
@@ -49,7 +49,6 @@ resource "citrixadc_servicegroup_servicegroupmember_binding" "le_lb_install_sg_s
 #####
 # Add and configure LB vServer - Type http
 #####
-
 resource "citrixadc_lbvserver" "le_lb_install_vserver_http" {
   name            = local.lb-vs-name
   servicetype     = var.adc-letsencrypt-lb.servicetype
@@ -67,7 +66,6 @@ resource "citrixadc_lbvserver" "le_lb_install_vserver_http" {
 #####
 # Bind LB Service Groups to LB vServers
 #####
-
 resource "citrixadc_lbvserver_servicegroup_binding" "le_lb_install_vserver_sg_binding" {
   name              = citrixadc_lbvserver.le_lb_install_vserver_http.name
   servicegroupname  = citrixadc_servicegroup.le_lb_install_servicegroup.servicegroupname
@@ -80,12 +78,22 @@ resource "citrixadc_lbvserver_servicegroup_binding" "le_lb_install_vserver_sg_bi
 #####
 # Save config
 #####
-
 resource "citrixadc_nsconfig_save" "le_lb_install_save" {
   all        = true
   timestamp  = timestamp()
 
   depends_on = [
     citrixadc_lbvserver_servicegroup_binding.le_lb_install_vserver_sg_binding
+  ]
+}
+
+#####
+# Wait a few seconds
+#####
+resource "time_sleep" "le_lb_wait_a_few_seconds" {
+  create_duration = "15s"
+
+  depends_on = [
+    citrixadc_nsconfig_save.le_lb_install_save
   ]
 }
