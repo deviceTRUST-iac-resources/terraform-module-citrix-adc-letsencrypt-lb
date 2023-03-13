@@ -1,13 +1,9 @@
 #####
-# Variables for administrative connection to the ADC
+# Variable for administrative connection to the ADC
 #####
-
-variable adc-base {
-}
+variable adc-base {}
 
 #####
-# Variables for LetsEncrypt Loadbalabcing configuration
+# Variable for LetsEncrypt Loadbalabcing configuration
 #####
-
-variable adc-letsencrypt-lb {
-}
+variable adc-letsencrypt-lb {}
